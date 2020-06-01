@@ -3,22 +3,21 @@ package com.org.wiichat.activities
 import android.content.Context
 import android.content.IntentFilter
 import android.content.pm.PackageManager
+import android.net.wifi.WpsInfo
 import android.net.wifi.p2p.WifiP2pManager
-import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
+import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
-import androidx.core.content.ContextCompat
-import androidx.core.content.PermissionChecker
 import androidx.databinding.DataBindingUtil
 import com.org.wiichat.R
 import com.org.wiichat.adapters.TabsAdapter
 import com.org.wiichat.core.WifiDirectBroadcastReceiver
 import com.org.wiichat.databinding.ActivityMainBinding
 import com.org.wiichat.fragments.DevicesFragment
-import java.security.Permission
-import java.util.jar.Manifest
+import com.org.wiichat.fragments.RecentFragment
+import es.dmoral.toasty.Toasty
 
-class MainActivity : AppCompatActivity() {
+class MainActivity : AppCompatActivity(), WifiP2pManager.ActionListener {
 
     lateinit var activityMainBinding: ActivityMainBinding
     lateinit var pagerAdapter: TabsAdapter
@@ -34,6 +33,7 @@ class MainActivity : AppCompatActivity() {
         android.Manifest.permission.ACCESS_FINE_LOCATION
     )
     val PERMISSIONS_REQUEST_CODE = 106
+
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -54,9 +54,9 @@ class MainActivity : AppCompatActivity() {
             titleColor = resources.getColor(R.color.colorPrimary)
         }
         pagerAdapter = TabsAdapter(supportFragmentManager)
-        pagerAdapter.addFragment(DevicesFragment(), "Recent")
-        pagerAdapter.addFragment(DevicesFragment(), "Around")
-        pagerAdapter.addFragment(DevicesFragment(), "Hidden")
+        pagerAdapter.addFragment(RecentFragment(), "Recent")
+        pagerAdapter.addFragment(DevicesFragment(manager, channel), "Around")
+        pagerAdapter.addFragment(DevicesFragment(manager, channel), "Hidden")
         activityMainBinding.tabsViewPager.adapter = pagerAdapter
         activityMainBinding.tabIndicator.setViewPager(activityMainBinding.tabsViewPager)
     }
@@ -74,19 +74,24 @@ class MainActivity : AppCompatActivity() {
         super.onResume()
     }
 
-    private fun initializeP2P(){
+    private fun initializeP2P() {
         channel = manager.initialize(this@MainActivity, mainLooper, null)
         channel.also { channel: WifiP2pManager.Channel ->
             broadcastReceiver = WifiDirectBroadcastReceiver(manager, channel, this@MainActivity)
         }
+        manager.discoverPeers(channel, this)
     }
 
-    private  fun hasPermissions () = REQUIRED_PERMISSIONS.all {permission->
-        ActivityCompat.checkSelfPermission(this,permission) == PackageManager.PERMISSION_GRANTED
+    private fun hasPermissions() = REQUIRED_PERMISSIONS.all { permission ->
+        ActivityCompat.checkSelfPermission(this, permission) == PackageManager.PERMISSION_GRANTED
     }
 
-    private fun requestPermissions(){
-        ActivityCompat.requestPermissions(this, REQUIRED_PERMISSIONS.toTypedArray(), PERMISSIONS_REQUEST_CODE)
+    private fun requestPermissions() {
+        ActivityCompat.requestPermissions(
+            this,
+            REQUIRED_PERMISSIONS.toTypedArray(),
+            PERMISSIONS_REQUEST_CODE
+        )
     }
 
     override fun onRequestPermissionsResult(
@@ -94,7 +99,7 @@ class MainActivity : AppCompatActivity() {
         permissions: Array<out String>,
         grantResults: IntArray
     ) {
-        if (requestCode == PERMISSIONS_REQUEST_CODE && grantResults.isNotEmpty()){
+        if (requestCode == PERMISSIONS_REQUEST_CODE && grantResults.isNotEmpty()) {
             initializeP2P()
         }
     }
@@ -103,5 +108,16 @@ class MainActivity : AppCompatActivity() {
     override fun onStop() {
         unregisterReceiver(broadcastReceiver)
         super.onStop()
+    }
+
+    override fun onSuccess() {
+        //Broadcast intent sent
+    }
+
+    override fun onFailure(reason: Int) {
+        Toasty.error(
+            this@MainActivity, "Unable to discover peers ${reason}",
+            Toasty.LENGTH_LONG
+        ).show()
     }
 }

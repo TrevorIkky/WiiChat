@@ -1,0 +1,102 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layout>
+    <androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+        xmlns:app="http://schemas.android.com/apk/res-auto"
+        xmlns:tools="http://schemas.android.com/tools"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        tools:context=".activities.ChatActivity">
+
+        <androidx.appcompat.widget.Toolbar
+            android:id="@+id/chatToolbar"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:background="?attr/colorPrimary"
+            android:minHeight="?attr/actionBarSize"
+            android:theme="?attr/actionBarTheme"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintVertical_bias="0.0" />
+
+        <androidx.emoji.widget.EmojiEditText
+            android:id="@+id/emojiEditText"
+            android:layout_width="0dp"
+            android:layout_height="?attr/actionBarSize"
+            android:layout_marginStart="15dp"
+            android:layout_marginEnd="10dp"
+            android:background="@android:color/transparent"
+            android:hint="@string/write_a_message"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toStartOf="@+id/addAttatchment"
+            app:layout_constraintStart_toEndOf="@+id/openEmojiKeyboard" />
+
+        <ImageView
+            android:id="@+id/openEmojiKeyboard"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:contentDescription="@string/emoji_keyboard"
+            android:src="@drawable/ic_insert_emoticon_black_24dp"
+            app:layout_constraintBottom_toBottomOf="@+id/emojiEditText"
+            app:layout_constraintStart_toStartOf="@+id/guideLineStart"
+            app:layout_constraintTop_toTopOf="@+id/emojiEditText" />
+
+        <ImageView
+            android:id="@+id/addAttatchment"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginEnd="10dp"
+            android:rotation="45.0"
+            android:contentDescription="@string/attachment"
+            android:src="@drawable/rotate_attachment"
+            app:layout_constraintBottom_toBottomOf="@+id/emojiEditText"
+            app:layout_constraintEnd_toStartOf="@+id/sendMessage"
+            app:layout_constraintTop_toTopOf="@+id/emojiEditText" />
+
+        <ImageView
+            android:id="@+id/sendMessage"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:contentDescription="@string/send_message"
+            android:src="@drawable/ic_send_black_24dp"
+            app:layout_constraintBottom_toBottomOf="@+id/emojiEditText"
+            app:layout_constraintEnd_toStartOf="@+id/guideLineEnd"
+            app:layout_constraintTop_toTopOf="@+id/emojiEditText" />
+
+        <androidx.constraintlayout.widget.Guideline
+            android:id="@+id/guideLineStart"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            app:layout_constraintGuide_begin="20dp" />
+
+        <androidx.constraintlayout.widget.Guideline
+            android:id="@+id/guideLineEnd"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            app:layout_constraintGuide_end="20dp" />
+
+        <androidx.constraintlayout.widget.Group
+            android:id="@+id/group"
+            android:layout_width="0dp"
+            android:layout_height="?attr/actionBarSize"
+            app:constraint_referenced_ids="emojiEditText,openEmojiKeyboard,addAttatchment,sendMessage"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintVertical_bias="1.0" />
+
+        <androidx.recyclerview.widget.RecyclerView
+            android:layout_width="0dp"
+            android:layout_height="0dp"
+            android:id="@+id/chatRecyclerView"
+            app:layout_constraintBottom_toTopOf="@+id/emojiEditText"
+            app:layout_constraintStart_toEndOf="@+id/guideLineStart"
+            app:layout_constraintEnd_toStartOf="@+id/guideLineEnd"
+            app:layout_constraintTop_toBottomOf="@+id/chatToolbar"
+            app:layout_constraintVertical_bias="0.0" />
+    </androidx.constraintlayout.widget.ConstraintLayout>
+</layout>

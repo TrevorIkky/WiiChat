@@ -1,10 +1,6 @@
 package com.org.wiichat.adapters
 
 import android.content.Context
-import android.net.wifi.WpsInfo
-import android.net.wifi.p2p.WifiP2pConfig
-import android.net.wifi.p2p.WifiP2pManager
-import android.util.Log
 import android.view.Gravity
 import android.view.LayoutInflater
 import android.view.View
@@ -17,21 +13,18 @@ import com.amulyakhare.textdrawable.TextDrawable
 import com.amulyakhare.textdrawable.util.ColorGenerator
 import com.org.wiichat.R
 import com.org.wiichat.pojo.ChatObject
-import es.dmoral.toasty.Toasty
 
 class ChatsAdapter(
     context: Context,
     chatList: ArrayList<ChatObject>,
-    m: WifiP2pManager,
-    c: WifiP2pManager.Channel
+    cb: (Pair<Int, View>) -> Unit
 ) :
     RecyclerView.Adapter<ChatsAdapter.ChatsViewHolder>() {
     var ctx = context
     var chats = chatList
     private val colorGenerator = ColorGenerator.DEFAULT
-    private var manager = m
-    private var channel = c
     private val TAG = "ChatsAdapter"
+    private var callback = cb
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ChatsViewHolder {
         val view = LayoutInflater.from(ctx).inflate(R.layout.chat_layout, parent, false)
@@ -47,9 +40,7 @@ class ChatsAdapter(
         val layoutParams: LinearLayout.LayoutParams by lazy {
             holder.messageContainer.layoutParams as LinearLayout.LayoutParams
         }
-        val config by lazy {
-            WifiP2pConfig()
-        }
+
         with(co) {
             val textDrawable = TextDrawable.builder()
                 .buildRound(wifiP2pDevice.deviceName, colorGenerator.randomColor)
@@ -63,33 +54,23 @@ class ChatsAdapter(
         }
 
         holder.messageContainer.setOnClickListener {
-            config.apply {
-                deviceAddress = co.wifiP2pDevice.deviceAddress
-                wps.setup = WpsInfo.PBC
-            }
-            manager.let {
-                manager.connect(channel, config, object : WifiP2pManager.ActionListener {
-                    override fun onSuccess() {
-                        Log.d(TAG, "Device connected.")
-                    }
 
-                    override fun onFailure(reason: Int) {
-                        Toasty.error(
-                            ctx,
-                            "Unable to connect to this device ${reason}",
-                            Toasty.LENGTH_LONG
-                        ).show()
-                    }
-                })
-            }
 
         }
     }
 
-    inner class ChatsViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
+    inner class ChatsViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView),
+        View.OnClickListener {
+        init {
+            itemView.setOnClickListener(this)
+        }
+
         val profileImage: ImageView = itemView.findViewById(R.id.profileImage)
         val textHeader: TextView = itemView.findViewById(R.id.chatTextHeader)
         val moreInfo: TextView = itemView.findViewById(R.id.chatMoreInfo)
         val messageContainer: LinearLayout = itemView.findViewById(R.id.messageContainer)
+        override fun onClick(v: View?) {
+            callback(Pair(adapterPosition, v!!))
+        }
     }
 }

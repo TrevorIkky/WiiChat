@@ -1,11 +1,9 @@
 package com.org.wiichat.fragments
 
 import android.net.wifi.WpsInfo
-import android.net.wifi.p2p.WifiP2pDevice
-import android.net.wifi.p2p.WifiP2pDeviceList
-import android.net.wifi.p2p.WifiP2pInfo
-import android.net.wifi.p2p.WifiP2pManager
+import android.net.wifi.p2p.*
 import android.os.Bundle
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -17,6 +15,7 @@ import com.org.wiichat.R
 import com.org.wiichat.adapters.ChatsAdapter
 import com.org.wiichat.databinding.FragmentDevicesBinding
 import com.org.wiichat.pojo.ChatObject
+import es.dmoral.toasty.Toasty
 import java.util.*
 
 /**
@@ -33,7 +32,11 @@ class DevicesFragment(
 
     private var manager = m
     private var channel = c
-    private var info: WpsInfo? = null
+    private var info: WifiP2pInfo? = null
+    val config by lazy {
+        WifiP2pConfig()
+    }
+    private val TAG = "DevicesFragment"
 
     var deviceList = arrayListOf<WifiP2pDevice>()
     var chatList = arrayListOf<ChatObject>()
@@ -61,7 +64,27 @@ class DevicesFragment(
             )
         }
         chatList.sortWith(Comparator { o1, o2 -> if (o1.timestamp > o2.timestamp) 1 else 0 })
-        adapter = ChatsAdapter(requireActivity(), chatList, manager, channel)
+        adapter = ChatsAdapter(requireActivity(), chatList) {
+            config.apply {
+                deviceAddress = chatList[it.first].wifiP2pDevice.deviceAddress
+                wps.setup = WpsInfo.PBC
+            }
+            manager.let {
+                manager.connect(channel, config, object : WifiP2pManager.ActionListener {
+                    override fun onSuccess() {
+                        Log.d(TAG, "Device connected.")
+                    }
+
+                    override fun onFailure(reason: Int) {
+                        Toasty.error(
+                            requireActivity(),
+                            "Unable to connect to this device ${reason}",
+                            Toasty.LENGTH_LONG
+                        ).show()
+                    }
+                })
+            }
+        }
         recyclerView.adapter = adapter
 
     }
@@ -73,6 +96,6 @@ class DevicesFragment(
     }
 
     override fun onConnectionInfoAvailable(info: WifiP2pInfo?) {
-
+        this.info = info
     }
 }

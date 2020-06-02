@@ -37,10 +37,6 @@ class ChatsAdapter(
 
     override fun onBindViewHolder(holder: ChatsViewHolder, position: Int) {
         val co = chats[position]
-        val layoutParams: LinearLayout.LayoutParams by lazy {
-            holder.messageContainer.layoutParams as LinearLayout.LayoutParams
-        }
-
         with(co) {
             val textDrawable = TextDrawable.builder()
                 .buildRound(wifiP2pDevice.deviceName, colorGenerator.randomColor)
@@ -48,15 +44,8 @@ class ChatsAdapter(
             //TODO.. change more info, switch drawable
             holder.moreInfo.text = timestamp.toString()
             holder.profileImage.setImageDrawable(textDrawable)
-
-            layoutParams.gravity = Gravity.END
-            holder.messageContainer.layoutParams = layoutParams
         }
 
-        holder.messageContainer.setOnClickListener {
-
-
-        }
     }
 
     inner class ChatsViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView),
@@ -68,7 +57,6 @@ class ChatsAdapter(
         val profileImage: ImageView = itemView.findViewById(R.id.profileImage)
         val textHeader: TextView = itemView.findViewById(R.id.chatTextHeader)
         val moreInfo: TextView = itemView.findViewById(R.id.chatMoreInfo)
-        val messageContainer: LinearLayout = itemView.findViewById(R.id.messageContainer)
         override fun onClick(v: View?) {
             callback(Pair(adapterPosition, v!!))
         }

@@ -1,5 +1,6 @@
 package com.org.wiichat.core
 
+import android.content.Context
 import android.util.Log
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -10,11 +11,12 @@ import java.net.InetSocketAddress
 import java.net.ServerSocket
 import java.net.Socket
 
-class MessageTaskHandler {
+class MessageTaskHandler(context: Context) {
     private var serverSocket: ServerSocket? = null
     private var socket = Socket()
     private val TIMEOUT = 2000
     private val TAG = "MessageTaskHandler"
+    private var ctx = context
 
     suspend fun sendMessage(messageObject: Any, address: String, port: Int) =
         withContext(Dispatchers.IO) {

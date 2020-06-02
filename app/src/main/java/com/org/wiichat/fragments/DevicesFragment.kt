@@ -86,6 +86,7 @@ class DevicesFragment(
             }
         }
         recyclerView.adapter = adapter
+        adapter.notifyDataSetChanged()
 
     }
 
@@ -97,5 +98,6 @@ class DevicesFragment(
 
     override fun onConnectionInfoAvailable(info: WifiP2pInfo?) {
         this.info = info
+
     }
 }

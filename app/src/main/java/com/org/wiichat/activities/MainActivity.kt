@@ -3,7 +3,6 @@ package com.org.wiichat.activities
 import android.content.Context
 import android.content.IntentFilter
 import android.content.pm.PackageManager
-import android.net.wifi.WpsInfo
 import android.net.wifi.p2p.WifiP2pManager
 import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
@@ -11,7 +10,7 @@ import androidx.core.app.ActivityCompat
 import androidx.databinding.DataBindingUtil
 import com.org.wiichat.R
 import com.org.wiichat.adapters.TabsAdapter
-import com.org.wiichat.core.WifiDirectBroadcastReceiver
+import com.org.wiichat.core.receiver.WifiDirectBroadcastReceiver
 import com.org.wiichat.databinding.ActivityMainBinding
 import com.org.wiichat.fragments.DevicesFragment
 import com.org.wiichat.fragments.RecentFragment
@@ -77,7 +76,12 @@ class MainActivity : AppCompatActivity(), WifiP2pManager.ActionListener {
     private fun initializeP2P() {
         channel = manager.initialize(this@MainActivity, mainLooper, null)
         channel.also { channel: WifiP2pManager.Channel ->
-            broadcastReceiver = WifiDirectBroadcastReceiver(manager, channel, this@MainActivity)
+            broadcastReceiver =
+                WifiDirectBroadcastReceiver(
+                    manager,
+                    channel,
+                    this@MainActivity
+                )
         }
         manager.discoverPeers(channel, this)
     }

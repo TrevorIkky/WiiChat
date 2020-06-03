@@ -1,7 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <layout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
-    xmlns:tools="http://schemas.android.com/tools">
+    xmlns:app="http://schemas.android.com/apk/res-auto">
 
     <androidx.constraintlayout.widget.ConstraintLayout
         android:layout_width="match_parent"
@@ -9,23 +8,15 @@
         android:background="@color/default_bg_color"
         android:fitsSystemWindows="true">
 
-        <com.google.android.material.appbar.AppBarLayout
-            android:id="@+id/appbar"
+        <androidx.appcompat.widget.Toolbar
+            android:id="@+id/toolbar"
             android:layout_width="match_parent"
             android:layout_height="?attr/actionBarSize"
             android:background="@color/default_bg_color"
+            android:elevation="0dp"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintTop_toTopOf="parent"
-            app:layout_constraintVertical_bias="0.0">
-
-            <androidx.appcompat.widget.Toolbar
-                android:id="@+id/toolbar"
-                android:layout_width="match_parent"
-                android:layout_height="?attr/actionBarSize"
-                android:background="@color/default_bg_color" />
-
-
-        </com.google.android.material.appbar.AppBarLayout>
+            app:layout_constraintVertical_bias="0.0" />
 
         <com.ogaclejapan.smarttablayout.SmartTabLayout
             android:id="@+id/tabIndicator"
@@ -35,14 +26,15 @@
             android:clipToPadding="false"
             android:paddingLeft="4dp"
             android:paddingRight="4dp"
-            app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintStart_toEndOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/appbar"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/toolbar"
             app:stl_defaultTabTextColor="@color/colorPrimary"
             app:stl_defaultTabTextHorizontalPadding="18dp"
+            app:stl_distributeEvenly="true"
             app:stl_dividerColor="@android:color/black"
             app:stl_dividerThickness="0dp"
-            app:stl_indicatorColor="#80928B8B"
+            app:stl_indicatorColor="@color/colorPrimaryFade"
             app:stl_indicatorCornerRadius="18dp"
             app:stl_indicatorGravity="center"
             app:stl_indicatorInterpolation="smart"

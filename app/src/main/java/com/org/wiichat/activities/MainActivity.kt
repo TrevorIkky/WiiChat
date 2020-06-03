@@ -1,10 +1,14 @@
 package com.org.wiichat.activities
 
 import android.content.Context
+import android.content.Intent
 import android.content.IntentFilter
 import android.content.pm.PackageManager
+import android.net.wifi.p2p.WifiP2pDeviceList
+import android.net.wifi.p2p.WifiP2pInfo
 import android.net.wifi.p2p.WifiP2pManager
 import android.os.Bundle
+import android.util.Log
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import androidx.databinding.DataBindingUtil
@@ -16,7 +20,8 @@ import com.org.wiichat.fragments.DevicesFragment
 import com.org.wiichat.fragments.RecentFragment
 import es.dmoral.toasty.Toasty
 
-class MainActivity : AppCompatActivity(), WifiP2pManager.ActionListener {
+class MainActivity : AppCompatActivity(), WifiP2pManager.ActionListener,
+    WifiP2pManager.PeerListListener, WifiP2pManager.ConnectionInfoListener {
 
     lateinit var activityMainBinding: ActivityMainBinding
     lateinit var pagerAdapter: TabsAdapter
@@ -31,7 +36,15 @@ class MainActivity : AppCompatActivity(), WifiP2pManager.ActionListener {
         android.Manifest.permission.WRITE_EXTERNAL_STORAGE,
         android.Manifest.permission.ACCESS_FINE_LOCATION
     )
+
+    companion object {
+        var wifiP2PInfo: WifiP2pInfo? = null
+    }
+
     val PERMISSIONS_REQUEST_CODE = 106
+    val TAG = "MainActivity"
+
+    lateinit var deviceFragment: DevicesFragment
 
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -52,12 +65,8 @@ class MainActivity : AppCompatActivity(), WifiP2pManager.ActionListener {
             title = "WiiChat"
             titleColor = resources.getColor(R.color.colorPrimary)
         }
-        pagerAdapter = TabsAdapter(supportFragmentManager)
-        pagerAdapter.addFragment(RecentFragment(), "Recent")
-        pagerAdapter.addFragment(DevicesFragment(manager, channel), "Around")
-        pagerAdapter.addFragment(DevicesFragment(manager, channel), "Hidden")
-        activityMainBinding.tabsViewPager.adapter = pagerAdapter
-        activityMainBinding.tabIndicator.setViewPager(activityMainBinding.tabsViewPager)
+        activityMainBinding.toolbar.setTitleTextColor(resources.getColor(R.color.colorPrimary))
+
     }
 
     override fun onResume() {
@@ -82,8 +91,19 @@ class MainActivity : AppCompatActivity(), WifiP2pManager.ActionListener {
                     channel,
                     this@MainActivity
                 )
+            deviceFragment = DevicesFragment()
+            pagerAdapter = TabsAdapter(supportFragmentManager)
+            pagerAdapter.addFragment(RecentFragment(), "Recent")
+            pagerAdapter.addFragment(RecentFragment(), "Hidden")
+            pagerAdapter.addFragment(RecentFragment(), "Other")
+            pagerAdapter.addFragment(deviceFragment, "Around")
+
+            activityMainBinding.tabsViewPager.adapter = pagerAdapter
+            activityMainBinding.tabIndicator.setViewPager(activityMainBinding.tabsViewPager)
         }
         manager.discoverPeers(channel, this)
+
+
     }
 
     private fun hasPermissions() = REQUIRED_PERMISSIONS.all { permission ->
@@ -116,6 +136,7 @@ class MainActivity : AppCompatActivity(), WifiP2pManager.ActionListener {
 
     override fun onSuccess() {
         //Broadcast intent sent
+        Log.d(TAG, "Discovered peers!")
     }
 
     override fun onFailure(reason: Int) {
@@ -123,5 +144,29 @@ class MainActivity : AppCompatActivity(), WifiP2pManager.ActionListener {
             this@MainActivity, "Unable to discover peers ${reason}",
             Toasty.LENGTH_LONG
         ).show()
+    }
+
+    override fun onPeersAvailable(peers: WifiP2pDeviceList?) {
+        if (peers!!.deviceList.isNotEmpty()) {
+            deviceFragment.peerList(ArrayList(peers.deviceList))
+        }
+    }
+
+    override fun onConnectionInfoAvailable(info: WifiP2pInfo?) {
+        wifiP2PInfo = info
+        if (MainActivity.wifiP2PInfo != null) {
+            val c = Intent(this, ChatActivity::class.java)
+            c.putExtra("isGroupOwner", info!!.isGroupOwner)
+            c.putExtra("isGroupFormed", info.groupFormed)
+            c.putExtra("hostAddress", info.groupOwnerAddress.hostAddress)
+            startActivity(c)
+        } else {
+            Toasty.error(
+                this,
+                "An unexpected error occurred. Please check " +
+                        "that the device you are connecting to has the WiiChat app",
+                Toasty.LENGTH_LONG
+            ).show()
+        }
     }
 }

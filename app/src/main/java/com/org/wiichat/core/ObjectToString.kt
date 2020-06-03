@@ -16,6 +16,5 @@ class ObjectToString {
                 TypeToken<ArrayList<MessageObject?>?>() {}.type
             return gson.fromJson<MessageObject>(json, type)
         }
-
     }
 }

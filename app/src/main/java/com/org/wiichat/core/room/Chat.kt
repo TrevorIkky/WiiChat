@@ -3,14 +3,17 @@ package com.org.wiichat.core.room
 import androidx.room.ColumnInfo
 import androidx.room.Entity
 import androidx.room.PrimaryKey
-import com.org.wiichat.pojo.MessageObject
 
 @Entity
 data class Chat(
     @PrimaryKey(autoGenerate = true)
     var chatId: Int,
     @ColumnInfo
-    var userIdRef : Int,
+    var userIdRef: Int,
     @ColumnInfo
-    var messageObject: MessageObject
+    var message: String,
+    @ColumnInfo
+    var baseImage: String,
+    @ColumnInfo
+    var timestamp: Long = System.currentTimeMillis()
 )

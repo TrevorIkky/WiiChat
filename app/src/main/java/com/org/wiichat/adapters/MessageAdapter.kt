@@ -10,10 +10,10 @@ import android.widget.LinearLayout
 import android.widget.RelativeLayout
 import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
-import com.github.thunder413.datetimeutils.DateTimeStyle
-import com.github.thunder413.datetimeutils.DateTimeUtils
 import com.org.wiichat.R
 import com.org.wiichat.pojo.MessageObject
+import com.org.zoner.utils.date.DateTimeStyle
+import com.org.zoner.utils.date.DateTimeUtils
 
 class MessageAdapter(
     context: Context,

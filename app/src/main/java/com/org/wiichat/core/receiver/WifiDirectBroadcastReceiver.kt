@@ -13,19 +13,18 @@ import com.org.wiichat.activities.MainActivity
 class WifiDirectBroadcastReceiver(
     m: WifiP2pManager,
     c: WifiP2pManager.Channel,
-    ctx: Context
+    a: MainActivity
 ) : BroadcastReceiver() {
     var manager = m
     var channel = c
-    var context = ctx
+    var activity = a
     val TAG = "WifiBroadcastReceiver"
     override fun onReceive(context: Context?, intent: Intent?) {
         when (intent!!.action) {
             WifiP2pManager.WIFI_P2P_PEERS_CHANGED_ACTION -> {
                 manager.requestPeers(
                     channel,
-                    (context as MainActivity).supportFragmentManager
-                        .findFragmentByTag("devicesFragmentRoot") as WifiP2pManager.PeerListListener
+                    activity as WifiP2pManager.PeerListListener
                 )
             }
             WifiP2pManager.WIFI_P2P_CONNECTION_CHANGED_ACTION -> {
@@ -34,8 +33,7 @@ class WifiDirectBroadcastReceiver(
                 if (info.isConnected) {
                     manager.requestConnectionInfo(
                         channel,
-                        (context as MainActivity).supportFragmentManager
-                            .findFragmentByTag("devicesFragmentRoot") as WifiP2pManager.ConnectionInfoListener
+                        activity as WifiP2pManager.ConnectionInfoListener
                     )
                 }
             }

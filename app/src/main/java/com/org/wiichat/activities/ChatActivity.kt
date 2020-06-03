@@ -5,17 +5,19 @@ import android.content.Intent
 import android.graphics.Color
 import android.net.Uri
 import android.os.Bundle
-import android.os.Handler
 import android.util.Log
 import androidx.appcompat.app.AppCompatActivity
 import androidx.databinding.DataBindingUtil
+import androidx.emoji.bundled.BundledEmojiCompatConfig
+import androidx.emoji.text.EmojiCompat
+import androidx.lifecycle.ViewModelProvider
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.org.wiichat.R
 import com.org.wiichat.adapters.MessageAdapter
-import com.org.wiichat.core.ObjectToString
-import com.org.wiichat.core.receiver.WiiMessageResultReceiver
-import com.org.wiichat.core.services.WiiMessageTransferService
+import com.org.wiichat.core.MessageTaskHandler
+import com.org.wiichat.core.room.WiiDatabase
 import com.org.wiichat.databinding.ActivityChatBinding
+import com.org.wiichat.models.MessageViewModel
 import com.org.wiichat.pojo.MessageObject
 
 class ChatActivity : AppCompatActivity() {
@@ -23,7 +25,8 @@ class ChatActivity : AppCompatActivity() {
     lateinit var activityChatBinding: ActivityChatBinding
 
     private lateinit var adapter: MessageAdapter
-    private lateinit var receiver: WiiMessageResultReceiver
+    private lateinit var messageViewModel: MessageViewModel
+    lateinit var messageTaskHandler: MessageTaskHandler
 
     private var messageList = arrayListOf<MessageObject>()
     private var imageUris = arrayListOf<Uri>()
@@ -34,6 +37,8 @@ class ChatActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        val config = BundledEmojiCompatConfig(this)
+        EmojiCompat.init(config)
         activityChatBinding =
             DataBindingUtil.setContentView(this@ChatActivity, R.layout.activity_chat)
         init()
@@ -41,24 +46,47 @@ class ChatActivity : AppCompatActivity() {
 
     private fun init() {
 
-        receiver = WiiMessageResultReceiver(
-            Handler(),
-            this@ChatActivity
-        )
+        val hostAddress = intent.getStringExtra("hostAddress")
+        val isGroupFormed = intent.getBooleanExtra("isGroupFormed", false)
+        val isGroupOwner = intent.getBooleanExtra("isGroupOwner", false)
+        val dbInstance = WiiDatabase.getInstance(this)
+        messageTaskHandler = MessageTaskHandler(this, dbInstance)
+        messageViewModel = ViewModelProvider(this@ChatActivity).get(MessageViewModel::class.java)
+
+        hostAddress.let {
+            if (isGroupOwner && isGroupFormed) {
+                //HOST
+                messageViewModel.createServer(messageTaskHandler)
+            } else if (isGroupFormed) {
+                //CLIENT
+                messageViewModel.createClient(hostAddress!!, messageTaskHandler)
+            }
+        }
 
         setSupportActionBar(activityChatBinding.chatToolbar)
         supportActionBar?.apply {
-            title = "Title"
+            title = "Chat"
             titleColor = Color.WHITE
             setDisplayHomeAsUpEnabled(true)
             setHomeAsUpIndicator(R.drawable.ic_arrow_back_white_24dp)
         }
+        activityChatBinding.chatToolbar.setTitleTextColor(Color.WHITE)
 
         activityChatBinding.chatRecyclerView.layoutManager = LinearLayoutManager(this@ChatActivity)
         initializeAdapter()
 
         activityChatBinding.addAttatchment.setOnClickListener {
             getImagesFromGallery()
+        }
+
+        activityChatBinding.sendMessage.setOnClickListener {
+            sendMessage(
+                MessageObject(
+                    System.currentTimeMillis(),
+                    activityChatBinding.emojiEditText.text.toString(),
+                    null
+                )
+            )
         }
     }
 
@@ -98,14 +126,8 @@ class ChatActivity : AppCompatActivity() {
         )
     }
 
-    private fun sendMessageViaService(o: MessageObject) {
-        val i = Intent(this@ChatActivity, WiiMessageTransferService::class.java)
-        i.action = WiiMessageTransferService.SEND_FILE_ACTION
-        i.putExtra("jsonObject", ObjectToString.getJsonFromObject(o))
-        i.putExtra("wiiResultService", receiver)
-        //TODO..address and port from intent
-        i.putExtra(WiiMessageTransferService.TO_ADDRESS, "")
-        i.putExtra(WiiMessageTransferService.PORT, 0)
-        startService(i)
+    private fun sendMessage(o: MessageObject) {
+        messageViewModel.sendMessage(o, messageTaskHandler)
     }
+
 }

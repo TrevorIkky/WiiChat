@@ -1,18 +1,18 @@
 package com.org.wiichat.adapters
 
 import android.content.Context
-import android.view.Gravity
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.ImageView
-import android.widget.LinearLayout
 import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
 import com.amulyakhare.textdrawable.TextDrawable
 import com.amulyakhare.textdrawable.util.ColorGenerator
 import com.org.wiichat.R
 import com.org.wiichat.pojo.ChatObject
+import com.org.zoner.utils.date.DateTimeStyle
+import com.org.zoner.utils.date.DateTimeUtils
 
 class ChatsAdapter(
     context: Context,
@@ -39,10 +39,11 @@ class ChatsAdapter(
         val co = chats[position]
         with(co) {
             val textDrawable = TextDrawable.builder()
-                .buildRound(wifiP2pDevice.deviceName, colorGenerator.randomColor)
+                .buildRound(wifiP2pDevice.deviceName[0].toString(), colorGenerator.randomColor)
             holder.textHeader.text = wifiP2pDevice.deviceName
-            //TODO.. change more info, switch drawable
-            holder.moreInfo.text = timestamp.toString()
+            val date = DateTimeUtils.formatDate(timestamp)
+            holder.moreInfo.text =
+                DateTimeUtils.formatWithStyle(date, DateTimeStyle.AGO_SHORT_STRING)
             holder.profileImage.setImageDrawable(textDrawable)
         }
 

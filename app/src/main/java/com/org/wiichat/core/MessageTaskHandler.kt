@@ -2,7 +2,12 @@ package com.org.wiichat.core
 
 import android.content.Context
 import android.util.Log
+import com.org.wiichat.core.room.WiiDatabase
+import com.org.wiichat.pojo.MessageObject
+import es.dmoral.toasty.Toasty
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.io.ByteArrayOutputStream
 import java.io.ObjectInputStream
@@ -11,54 +16,65 @@ import java.net.InetSocketAddress
 import java.net.ServerSocket
 import java.net.Socket
 
-class MessageTaskHandler(context: Context) {
+class MessageTaskHandler(context: Context, dbInstance: WiiDatabase) {
     private var serverSocket: ServerSocket? = null
-    private var socket = Socket()
+    private var socket: Socket? = null
     private val TIMEOUT = 2000
+    private val PORT = 2828
     private val TAG = "MessageTaskHandler"
-    private var ctx = context
+    private val ctx = context
 
-    suspend fun sendMessage(messageObject: Any, address: String, port: Int) =
+    suspend fun createClient(address: String) =
         withContext(Dispatchers.IO) {
-            socket.bind(null)
-            socket.connect(InetSocketAddress(address, port), TIMEOUT)
-            val outputStream = socket.getOutputStream()
-            val byteOs = ByteArrayOutputStream()
-            try {
-                val objectOutputStream = ObjectOutputStream(byteOs)
-                objectOutputStream.writeObject(messageObject)
-                outputStream.write(byteOs.toByteArray())
-            } catch (e: Exception) {
-                Log.d(TAG, e!!.message)
-            } finally {
-                byteOs.flush()
-                outputStream.close()
-                socket.takeIf { socket.isConnected }.apply {
-                    this!!.close()
-                }
-                return@withContext true
-            }
+            socket = Socket()
+            socket!!.bind(null)
+            socket!!.connect(InetSocketAddress(address, PORT), TIMEOUT)
+            handleMessage()
         }
 
-    suspend fun listenForMessage(port: Int) = withContext(Dispatchers.IO) {
-        serverSocket = ServerSocket(port)
-        //blocking call accept()
-        val clientSocket = serverSocket?.accept()
-        var objectFromInputStream: Any? = null
+    suspend fun createServer() = withContext(Dispatchers.IO) {
+        serverSocket = ServerSocket(PORT)
+        socket = serverSocket?.accept()
+        handleMessage()
+
+    }
+
+    suspend fun sendMessage(o: Any?) = withContext(Dispatchers.IO) {
         try {
-            val inputStream = clientSocket?.getInputStream()
-            inputStream?.let { byteArrayInputStream ->
-                val objectInputStream = ObjectInputStream(inputStream)
-                objectFromInputStream = objectInputStream.readObject()
-            }
-        } catch (e: Exception) {
-            Log.d(TAG, e.message!!)
+            val byteOs = ByteArrayOutputStream()
+            val socketOutputStream = socket!!.getOutputStream()
+            val objectOutputStream = ObjectOutputStream(byteOs)
+            objectOutputStream.writeObject(o)
+            socketOutputStream.write(byteOs.toByteArray())
+        } catch (ex: Exception) {
+            Log.d(TAG, ex?.message)
         } finally {
-            serverSocket?.takeIf { !serverSocket!!.isClosed }.also {
-                serverSocket?.close()
-                return@withContext objectFromInputStream
-            }
+            Log.d(TAG, "Message serialized & sent!")
+            return@withContext true
         }
+    }
 
+    suspend fun handleMessage() = withContext(Dispatchers.IO) {
+        val socketInputStream = socket!!.getInputStream()
+        var objectFromInputStream: Any? = null
+        while (true) {
+            Log.d(TAG, "Checking for input stream.")
+            if (socketInputStream.read() > 0) {
+                Log.d(TAG, "Input stream available.")
+                val objectInputStream = ObjectInputStream(socketInputStream)
+                objectFromInputStream = objectInputStream.readObject()
+                objectFromInputStream?.let {
+                    Log.d(TAG, (objectFromInputStream as MessageObject).message)
+                    launch(Dispatchers.Main) {
+                        Toasty.success(
+                            ctx,
+                            (objectFromInputStream as MessageObject).message,
+                            Toasty.LENGTH_SHORT
+                        ).show()
+                    }
+                }
+            }
+            delay(1000)
+        }
     }
 }

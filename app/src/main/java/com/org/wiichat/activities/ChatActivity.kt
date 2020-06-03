@@ -10,11 +10,14 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.databinding.DataBindingUtil
 import androidx.emoji.bundled.BundledEmojiCompatConfig
 import androidx.emoji.text.EmojiCompat
+import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProvider
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.org.wiichat.R
 import com.org.wiichat.adapters.MessageAdapter
 import com.org.wiichat.core.MessageTaskHandler
+import com.org.wiichat.core.PersistentStorage
+import com.org.wiichat.core.room.Chat
 import com.org.wiichat.core.room.WiiDatabase
 import com.org.wiichat.databinding.ActivityChatBinding
 import com.org.wiichat.models.MessageViewModel
@@ -28,7 +31,9 @@ class ChatActivity : AppCompatActivity() {
     private lateinit var messageViewModel: MessageViewModel
     lateinit var messageTaskHandler: MessageTaskHandler
 
-    private var messageList = arrayListOf<MessageObject>()
+    lateinit var persistentStorage: PersistentStorage
+
+    private var messageList = listOf<Chat>()
     private var imageUris = arrayListOf<Uri>()
 
     private val GALLERY_REQUEST = 206
@@ -49,9 +54,11 @@ class ChatActivity : AppCompatActivity() {
         val hostAddress = intent.getStringExtra("hostAddress")
         val isGroupFormed = intent.getBooleanExtra("isGroupFormed", false)
         val isGroupOwner = intent.getBooleanExtra("isGroupOwner", false)
+
         val dbInstance = WiiDatabase.getInstance(this)
         messageTaskHandler = MessageTaskHandler(this, dbInstance)
         messageViewModel = ViewModelProvider(this@ChatActivity).get(MessageViewModel::class.java)
+        persistentStorage = PersistentStorage(this)
 
         hostAddress.let {
             if (isGroupOwner && isGroupFormed) {
@@ -72,7 +79,11 @@ class ChatActivity : AppCompatActivity() {
         }
         activityChatBinding.chatToolbar.setTitleTextColor(Color.WHITE)
 
-        activityChatBinding.chatRecyclerView.layoutManager = LinearLayoutManager(this@ChatActivity)
+        activityChatBinding.chatRecyclerView.layoutManager =
+            LinearLayoutManager(this@ChatActivity).apply {
+                reverseLayout = true
+            }
+
         initializeAdapter()
 
         activityChatBinding.addAttatchment.setOnClickListener {
@@ -84,10 +95,18 @@ class ChatActivity : AppCompatActivity() {
                 MessageObject(
                     System.currentTimeMillis(),
                     activityChatBinding.emojiEditText.text.toString(),
-                    null
+                    deviceAddress = hostAddress,
+                    baseImage = null,
+                    userId = persistentStorage.getUserId()
                 )
             )
         }
+
+        dbInstance.chatDao().getAllMessages().observe(this@ChatActivity, Observer { chatList ->
+            messageList = chatList
+            initializeAdapter()
+
+        })
     }
 
     private fun initializeAdapter() {
@@ -118,7 +137,7 @@ class ChatActivity : AppCompatActivity() {
 
     private fun getImagesFromGallery() {
         val intent = Intent()
-        intent.action = "images/*"
+        intent.action = "image/*"
         intent.putExtra(Intent.EXTRA_ALLOW_MULTIPLE, true)
         startActivityForResult(
             Intent.createChooser(intent, "Select images"),

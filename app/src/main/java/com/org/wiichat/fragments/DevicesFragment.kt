@@ -16,10 +16,10 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.org.wiichat.R
 import com.org.wiichat.activities.MainActivity
-import com.org.wiichat.adapters.ChatsAdapter
+import com.org.wiichat.adapters.DevicesAdapter
 import com.org.wiichat.databinding.FragmentDevicesBinding
 import com.org.wiichat.interfaces.InitPeerList
-import com.org.wiichat.pojo.ChatObject
+import com.org.wiichat.pojo.DeviceObject
 import es.dmoral.toasty.Toasty
 import java.util.*
 
@@ -31,7 +31,7 @@ class DevicesFragment(
 
     lateinit var devicesFragmentBinding: FragmentDevicesBinding
     lateinit var recyclerView: RecyclerView
-    lateinit var adapter: ChatsAdapter
+    lateinit var adapter: DevicesAdapter
 
     private lateinit var manager: WifiP2pManager
     private lateinit var channel: WifiP2pManager.Channel
@@ -45,7 +45,7 @@ class DevicesFragment(
     private val TAG = "DevicesFragment"
 
 
-    var chatList = arrayListOf<ChatObject>()
+    var chatList = arrayListOf<DeviceObject>()
 
     private fun <T : Any?> MutableLiveData<T>.default(initialValue: T) =
         apply { setValue(initialValue) }
@@ -75,13 +75,13 @@ class DevicesFragment(
                 chatList.clear()
                 for ((_, item) in peers.withIndex()) {
                     chatList.add(
-                        ChatObject(
+                        DeviceObject(
                             item, System.currentTimeMillis()
                         )
                     )
                 }
                 chatList.sortWith(Comparator { o1, o2 -> if (o1.timestamp > o2.timestamp) 1 else 0 })
-                adapter = ChatsAdapter(requireActivity(), chatList) {
+                adapter = DevicesAdapter(requireActivity(), chatList) {
                     config.apply {
                         deviceAddress = chatList[it.first].wifiP2pDevice.deviceAddress
                         wps.setup = WpsInfo.PBC

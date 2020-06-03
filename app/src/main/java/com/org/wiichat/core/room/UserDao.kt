@@ -11,6 +11,9 @@ interface UserDao {
     @Query("SELECT * FROM user")
     fun getAllUsers(): LiveData<List<User>>
 
+    @Query("SELECT * FROM user WHERE userId = :userId")
+    fun getUserFromId(userId: Int): List<User>
+
     @Insert
     suspend fun addUser(user: User): Long
 

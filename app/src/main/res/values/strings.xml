@@ -30,4 +30,8 @@
     <string name="time_ago_days">%1$d d ago</string>
     <string name="time_ago_month">%1$d m ago</string>
     <string name="time_ago_months">%1$d m ago</string>
+    <string name="action">Action</string>
+    <string name="action_text">Action text</string>
+    <string name="discover_peers">Discover peers</string>
+    <string name="you_don_t_have_any_recent_chats">You don\'t have any recent chats!</string>
 </resources>

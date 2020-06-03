@@ -22,6 +22,8 @@ class MessageViewModel : ViewModel() {
         }
     }
 
+
+
     fun sendMessage(o: Any, messageTaskHandler: MessageTaskHandler) {
         viewModelScope.launch {
             messageTaskHandler.sendMessage(o)

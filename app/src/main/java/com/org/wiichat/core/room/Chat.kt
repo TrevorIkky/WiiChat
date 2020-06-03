@@ -2,9 +2,10 @@ package com.org.wiichat.core.room
 
 import androidx.room.ColumnInfo
 import androidx.room.Entity
+import androidx.room.Index
 import androidx.room.PrimaryKey
 
-@Entity
+@Entity(indices = [Index(value = ["timestamp", "userIdRef"])])
 data class Chat(
     @PrimaryKey(autoGenerate = true)
     var chatId: Int,
@@ -13,7 +14,7 @@ data class Chat(
     @ColumnInfo
     var message: String,
     @ColumnInfo
-    var baseImage: String,
+    var baseImage: String?,
     @ColumnInfo
     var timestamp: Long = System.currentTimeMillis()
 )

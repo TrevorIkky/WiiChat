@@ -14,6 +14,7 @@ import androidx.core.app.ActivityCompat
 import androidx.databinding.DataBindingUtil
 import com.org.wiichat.R
 import com.org.wiichat.adapters.TabsAdapter
+import com.org.wiichat.core.PersistentStorage
 import com.org.wiichat.core.receiver.WifiDirectBroadcastReceiver
 import com.org.wiichat.databinding.ActivityMainBinding
 import com.org.wiichat.fragments.DevicesFragment
@@ -45,6 +46,7 @@ class MainActivity : AppCompatActivity(), WifiP2pManager.ActionListener,
     val TAG = "MainActivity"
 
     lateinit var deviceFragment: DevicesFragment
+    lateinit var persistentStorage: PersistentStorage
 
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -93,6 +95,10 @@ class MainActivity : AppCompatActivity(), WifiP2pManager.ActionListener,
                 )
             deviceFragment = DevicesFragment()
             pagerAdapter = TabsAdapter(supportFragmentManager)
+
+            persistentStorage = PersistentStorage(this)
+            if (persistentStorage.getUserId() == 0.toLong())
+                persistentStorage.createUserId()
 
             pagerAdapter.addFragment(RecentFragment(), "Recent")
             pagerAdapter.addFragment(deviceFragment, "Around")

@@ -10,18 +10,18 @@ import androidx.recyclerview.widget.RecyclerView
 import com.amulyakhare.textdrawable.TextDrawable
 import com.amulyakhare.textdrawable.util.ColorGenerator
 import com.org.wiichat.R
-import com.org.wiichat.pojo.ChatObject
+import com.org.wiichat.pojo.DeviceObject
 import com.org.zoner.utils.date.DateTimeStyle
 import com.org.zoner.utils.date.DateTimeUtils
 
-class ChatsAdapter(
+class DevicesAdapter(
     context: Context,
-    chatList: ArrayList<ChatObject>,
+    deviceList: ArrayList<DeviceObject>,
     cb: (Pair<Int, View>) -> Unit
 ) :
-    RecyclerView.Adapter<ChatsAdapter.ChatsViewHolder>() {
+    RecyclerView.Adapter<DevicesAdapter.ChatsViewHolder>() {
     var ctx = context
-    var chats = chatList
+    var chats = deviceList
     private val colorGenerator = ColorGenerator.DEFAULT
     private val TAG = "ChatsAdapter"
     private var callback = cb

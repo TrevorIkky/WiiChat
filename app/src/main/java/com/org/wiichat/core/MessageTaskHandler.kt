@@ -26,17 +26,24 @@ class MessageTaskHandler(context: Context, dbInstance: WiiDatabase) {
 
     suspend fun createClient(address: String) =
         withContext(Dispatchers.IO) {
-            socket = Socket()
-            socket!!.bind(null)
-            socket!!.connect(InetSocketAddress(address, PORT), TIMEOUT)
-            handleMessage()
+            try {
+                socket = Socket()
+                socket!!.bind(null)
+                socket!!.connect(InetSocketAddress(address, PORT), TIMEOUT)
+                handleMessage()
+            } catch (ex: Exception) {
+                throw  ex
+            }
         }
 
     suspend fun createServer() = withContext(Dispatchers.IO) {
-        serverSocket = ServerSocket(PORT)
-        socket = serverSocket?.accept()
-        handleMessage()
-
+        try {
+            serverSocket = ServerSocket(PORT)
+            socket = serverSocket?.accept()
+            handleMessage()
+        } catch (ex: Exception) {
+            throw ex
+        }
     }
 
     suspend fun sendMessage(o: Any?) = withContext(Dispatchers.IO) {
@@ -45,36 +52,40 @@ class MessageTaskHandler(context: Context, dbInstance: WiiDatabase) {
             val socketOutputStream = socket!!.getOutputStream()
             val objectOutputStream = ObjectOutputStream(byteOs)
             objectOutputStream.writeObject(o)
-            socketOutputStream.write(byteOs.toByteArray())
+            if (byteOs.toByteArray().isNotEmpty()) {
+                socketOutputStream.write(byteOs.toByteArray())
+            }
         } catch (ex: Exception) {
-            Log.d(TAG, ex?.message)
+            throw ex
         } finally {
-            Log.d(TAG, "Message serialized & sent!")
-            return@withContext true
+            //  return@withContext true
         }
     }
 
     suspend fun handleMessage() = withContext(Dispatchers.IO) {
         val socketInputStream = socket!!.getInputStream()
         var objectFromInputStream: Any? = null
-        while (true) {
-            Log.d(TAG, "Checking for input stream.")
-            if (socketInputStream.read() > 0) {
-                Log.d(TAG, "Input stream available.")
-                val objectInputStream = ObjectInputStream(socketInputStream)
-                objectFromInputStream = objectInputStream.readObject()
-                objectFromInputStream?.let {
-                    Log.d(TAG, (objectFromInputStream as MessageObject).message)
-                    launch(Dispatchers.Main) {
-                        Toasty.success(
-                            ctx,
-                            (objectFromInputStream as MessageObject).message,
-                            Toasty.LENGTH_SHORT
-                        ).show()
+        while (socket != null) {
+            try {
+                if (socketInputStream.available() != 0) {
+                    Log.d(TAG, "Input stream available.")
+                    val objectInputStream = ObjectInputStream(socketInputStream)
+                    objectFromInputStream = objectInputStream.readObject()
+                    objectFromInputStream?.let {
+                        Log.d(TAG, (objectFromInputStream as MessageObject).message)
+                        launch(Dispatchers.Main) {
+                            Toasty.success(
+                                ctx,
+                                (objectFromInputStream as MessageObject).message,
+                                Toasty.LENGTH_SHORT
+                            ).show()
+                        }
                     }
                 }
+            } catch (ex: Exception) {
+                throw ex
             }
-            delay(1000)
+            delay(500)
         }
     }
 }

@@ -72,7 +72,7 @@ class DevicesFragment(
         peers.observe(viewLifecycleOwner, androidx.lifecycle.Observer { peers ->
             if (peers.isNotEmpty()) {
                 devicesFragmentBinding.loadingIndicator.hide()
-
+                chatList.clear()
                 for ((_, item) in peers.withIndex()) {
                     chatList.add(
                         ChatObject(

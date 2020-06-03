@@ -93,10 +93,11 @@ class MainActivity : AppCompatActivity(), WifiP2pManager.ActionListener,
                 )
             deviceFragment = DevicesFragment()
             pagerAdapter = TabsAdapter(supportFragmentManager)
+
             pagerAdapter.addFragment(RecentFragment(), "Recent")
+            pagerAdapter.addFragment(deviceFragment, "Around")
             pagerAdapter.addFragment(RecentFragment(), "Hidden")
             pagerAdapter.addFragment(RecentFragment(), "Other")
-            pagerAdapter.addFragment(deviceFragment, "Around")
 
             activityMainBinding.tabsViewPager.adapter = pagerAdapter
             activityMainBinding.tabIndicator.setViewPager(activityMainBinding.tabsViewPager)
